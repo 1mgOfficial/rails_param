@@ -44,12 +44,16 @@ module RailsParam
 
         if block_given?
           if type == Array
-            params[name].each_with_index do |element, i|
-              if element.is_a?(Hash) || element.is_a?(ActionController::Parameters)
-                recurse element, &block
-              else
-                params[name][i] = recurse({ i => element }, i, &block) # supply index as key unless value is hash
-              end
+            i = 0
+            params[name].map! do |element|
+              val = if element.is_a?(Hash) || element.is_a?(ActionController::Parameters)
+                      recurse element, &block
+                      element
+                    else
+                      recurse({ i => element }, i, &block) # supply index as key unless value is hash
+                    end
+              i += 1
+              val
             end
           else
             recurse params[name], &block
